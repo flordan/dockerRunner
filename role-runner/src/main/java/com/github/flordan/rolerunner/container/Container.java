@@ -18,7 +18,7 @@ package com.github.flordan.rolerunner.container;
 
 import com.github.flordan.rolerunner.image.Image;
 
-public class Container {
+public abstract class Container {
 
     private static enum Status {
         PENDING,
@@ -55,6 +55,7 @@ public class Container {
             monitor.createdContainer(this);
         }
     }
+    public abstract void start();
 
     public void started() {
         System.out.println("Container " + this + " has started");

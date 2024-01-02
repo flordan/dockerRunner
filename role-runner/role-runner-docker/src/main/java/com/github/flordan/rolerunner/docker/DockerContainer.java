@@ -44,4 +44,9 @@ public class DockerContainer extends Container {
     public String getName() {
         return name;
     }
+
+    @Override
+    public void start() {
+        DockerManager.startContainer(this);
+    }
 }
