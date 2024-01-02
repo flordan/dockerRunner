@@ -25,8 +25,7 @@ public abstract class Image {
     private final Set<ImageIdentifier> tags;
 
     public Image() {
-        this.monitor = null;
-        tags = new HashSet<>();
+        this(null);
     }
     public Image(ImageManager monitor) {
         this.monitor = monitor;
@@ -50,6 +49,9 @@ public abstract class Image {
             this.monitor.fetchedImage(this);
         }
     }
+
+    public abstract void delete();
+
     public final void deleted(){
         if (this.monitor !=null) {
             this.monitor.deletedImage(this);

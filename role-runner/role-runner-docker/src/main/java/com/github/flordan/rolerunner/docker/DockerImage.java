@@ -53,4 +53,8 @@ public class DockerImage extends Image {
         return this.containers;
     }
 
+    @Override
+    public void delete() {
+        DockerManager.deleteImage(this);
+    }
 }

@@ -25,8 +25,6 @@ public class ImageManager<I extends Image> {
     public interface ImageHandler<I> {
         public void requestImage(ImageIdentifier iId, ImageManager handler);
 
-        public void deleteImage(I img);
-
         I getImage(ImageIdentifier iId);
     }
 
@@ -95,7 +93,7 @@ public class ImageManager<I extends Image> {
             toDelete.add(img);
         }
         for (I img : toDelete) {
-            handler.deleteImage(img);
+            img.delete();
         }
     }
 }
