@@ -26,14 +26,13 @@ import com.github.flordan.rolerunner.image.ImageManager;
 import java.util.Set;
 
 
-public abstract class RoleRunnerImpl<I extends Image>
-    implements RoleRunner<I>, ImageManager.ImageHandler<I> {
+public abstract class RoleRunnerImpl implements RoleRunner, ImageManager.ImageHandler {
 
-    protected final ImageManager<I> images;
+    protected final ImageManager images;
     protected final ContainerManager containers;
 
     public RoleRunnerImpl() {
-        this.images = new ImageManager<>(this);
+        this.images = new ImageManager(this);
         this.containers = new ContainerManager();
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
@@ -56,11 +55,11 @@ public abstract class RoleRunnerImpl<I extends Image>
 
     public final void startRole(ImageIdentifier iId) {
         System.out.println("Requesting role for image " + iId);
-        images.obtainImage(iId, new ImageManager.ObtainCallback<I>() {
+        images.obtainImage(iId, new ImageManager.ObtainCallback() {
             @Override
-            public void obtained(I img) {
+            public void obtained(Image img) {
                 try {
-                    containers.startRole(img);
+                    img.createContainer(containers);
                 } catch (ImageNotFoundException infe) {
                     startRole(iId);
                 }

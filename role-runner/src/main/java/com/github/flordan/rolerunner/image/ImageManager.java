@@ -20,23 +20,23 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 
-public class ImageManager<I extends Image> {
+public class ImageManager {
 
-    public interface ImageHandler<I> {
+    public interface ImageHandler {
         public void requestImage(ImageIdentifier iId, ImageManager handler);
 
-        I getImage(ImageIdentifier iId);
+        Image getImage(ImageIdentifier iId);
     }
 
-    public interface ObtainCallback<I> {
-        public void obtained(I img);
+    public interface ObtainCallback {
+        public void obtained(Image img);
     }
 
-    private final ImageHandler<I> handler;
-    private final TreeMap<ImageIdentifier, List<ObtainCallback<I>>> pendingRequests;
-    private final List<I> images;
+    private final ImageHandler handler;
+    private final TreeMap<ImageIdentifier, List<ObtainCallback>> pendingRequests;
+    private final List<Image> images;
 
-    public ImageManager(ImageHandler<I> handler) {
+    public ImageManager(ImageHandler handler) {
         this.handler = handler;
         images = new LinkedList<>();
         pendingRequests = new TreeMap<>();
@@ -46,9 +46,9 @@ public class ImageManager<I extends Image> {
         return handler.getImage(iId) != null;
     }
 
-    public final synchronized void obtainImage(ImageIdentifier iId, ObtainCallback<I> callback) {
+    public final synchronized void obtainImage(ImageIdentifier iId, ObtainCallback callback) {
         System.out.println("IM obtaining " + iId);
-        I img = handler.getImage(iId);
+        Image img = handler.getImage(iId);
         if (img != null) {
             System.out.println("\tAlready Present");
             callback.obtained(img);
@@ -56,7 +56,7 @@ public class ImageManager<I extends Image> {
             if (callback!=null) {
                 synchronized (pendingRequests) {
                     System.out.println("\tRequesting");
-                    List<ObtainCallback<I>> cbs = pendingRequests.get(iId);
+                    List<ObtainCallback> cbs = pendingRequests.get(iId);
                     if (cbs == null) {
                         cbs = new LinkedList<>();
                         pendingRequests.put(iId, cbs);
@@ -68,12 +68,12 @@ public class ImageManager<I extends Image> {
         }
     }
 
-    public final void fetchedImage(I img) {
+    public final void fetchedImage(Image img) {
         System.out.println("Obtained " + img.getTags());
         images.add(img);
         synchronized (pendingRequests) {
             for (ImageIdentifier iId : img.getTags()) {
-                List<ObtainCallback<I>> cbs = this.pendingRequests.remove(iId);
+                List<ObtainCallback> cbs = this.pendingRequests.remove(iId);
                 if (cbs != null) {
                     for (ObtainCallback cb : cbs) {
                         cb.obtained(img);
@@ -83,16 +83,16 @@ public class ImageManager<I extends Image> {
         }
     }
 
-    public final void deletedImage(I img) {
+    public final void deletedImage(Image img) {
         images.remove(img);
     }
 
     public final void clear() {
-        List<I> toDelete = new LinkedList<>();
-        for (I img : images) {
+        List<Image> toDelete = new LinkedList<>();
+        for (Image img : images) {
             toDelete.add(img);
         }
-        for (I img : toDelete) {
+        for (Image img : toDelete) {
             img.delete();
         }
     }

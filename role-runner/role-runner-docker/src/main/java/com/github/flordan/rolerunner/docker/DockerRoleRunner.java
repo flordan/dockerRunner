@@ -24,7 +24,7 @@ import com.github.flordan.rolerunner.image.ImageManager;
 
 import java.util.Set;
 
-public class DockerRoleRunner extends RoleRunnerImpl<DockerImage> {
+public class DockerRoleRunner extends RoleRunnerImpl {
 
     @Override
     public Set<ImageIdentifier> getAvailableImages() {
@@ -40,5 +40,5 @@ public class DockerRoleRunner extends RoleRunnerImpl<DockerImage> {
     public void requestImage(ImageIdentifier iId, ImageManager handler) {
         DockerManager.requestImage(iId, handler);
     }
-    
+
 }

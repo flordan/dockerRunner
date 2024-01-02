@@ -31,10 +31,6 @@ public class ContainerManager {
         this.containers = new LinkedList<>();
     }
 
-    public void startRole(Image image) throws ImageNotFoundException {
-        image.createContainer(this);
-    }
-
 
     public void createdContainer(Container cntr) {
         containers.add(cntr);
