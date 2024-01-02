@@ -26,11 +26,11 @@ import com.github.flordan.rolerunner.image.ImageManager;
 import java.util.Set;
 
 
-public abstract class RoleRunnerImpl<I extends Image, C extends Container>
-    implements RoleRunner<I,C>, ImageManager.ImageHandler<I>, ContainerManager.ContainerHandler<C, I> {
+public abstract class RoleRunnerImpl<I extends Image>
+    implements RoleRunner<I>, ImageManager.ImageHandler<I>, ContainerManager.ContainerHandler<I> {
 
     protected final ImageManager<I> images;
-    protected final ContainerManager<C, I > containers;
+    protected final ContainerManager<I> containers;
 
     public RoleRunnerImpl() {
         this.images = new ImageManager<>(this);

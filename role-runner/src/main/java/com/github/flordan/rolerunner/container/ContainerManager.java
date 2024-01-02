@@ -24,17 +24,17 @@ import com.github.flordan.rolerunner.image.ImageManager;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ContainerManager<C extends Container, I extends Image> {
+public class ContainerManager<I extends Image> {
 
 
-    public interface ContainerHandler<C extends Container, I extends Image> {
-        void createContainer(I image, ContainerManager<C, I> manager) throws ImageNotFoundException;
+    public interface ContainerHandler<I extends Image> {
+        void createContainer(I image, ContainerManager<I> manager) throws ImageNotFoundException;
 
     }
 
-    private final ContainerHandler<C, I> handler;
-    private final List<C> containers;
-    public ContainerManager(ContainerHandler<C, I> handler) {
+    private final ContainerHandler<I> handler;
+    private final List<Container> containers;
+    public ContainerManager(ContainerHandler<I> handler) {
         this.handler = handler;
         this.containers = new LinkedList<>();
     }
@@ -44,12 +44,12 @@ public class ContainerManager<C extends Container, I extends Image> {
     }
 
 
-    public void createdContainer(C cntr) {
+    public void createdContainer(Container cntr) {
         containers.add(cntr);
         cntr.start();
     }
 
-    public void destroyedContainer(C cntr) {
+    public void destroyedContainer(Container cntr) {
         containers.remove(cntr);
         synchronized (this) {
             this.notify();
@@ -57,11 +57,11 @@ public class ContainerManager<C extends Container, I extends Image> {
     }
 
     public final void clear() {
-        List<C> toDelete = new LinkedList<>();
-        for (C cntr : containers) {
+        List<Container> toDelete = new LinkedList<>();
+        for (Container cntr : containers) {
             toDelete.add(cntr);
         }
-        for (C cntr : toDelete) {
+        for (Container cntr : toDelete) {
             cntr.destroy();
         }
         System.out.println("Waiting for all containers to be removed.");

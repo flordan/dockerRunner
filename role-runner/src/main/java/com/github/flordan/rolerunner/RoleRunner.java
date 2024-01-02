@@ -23,7 +23,7 @@ import com.github.flordan.rolerunner.image.ImageIdentifier;
 import java.util.Set;
 
 
-public interface RoleRunner<I extends Image, C extends Container> {
+public interface RoleRunner<I extends Image> {
 
     boolean isImageAvailable(ImageIdentifier tag);
 

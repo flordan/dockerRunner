@@ -24,7 +24,7 @@ import com.github.flordan.rolerunner.image.ImageManager;
 
 import java.util.Set;
 
-public class DockerRoleRunner extends RoleRunnerImpl<DockerImage, DockerContainer> {
+public class DockerRoleRunner extends RoleRunnerImpl<DockerImage> {
 
     @Override
     public Set<ImageIdentifier> getAvailableImages() {
@@ -42,7 +42,7 @@ public class DockerRoleRunner extends RoleRunnerImpl<DockerImage, DockerContaine
     }
 
     @Override
-    public void createContainer(DockerImage img, ContainerManager<DockerContainer, DockerImage> handler) throws ImageNotFoundException {
+    public void createContainer(DockerImage img, ContainerManager<DockerImage> handler) throws ImageNotFoundException {
         DockerManager.createContainer(img, handler);
     }
 }

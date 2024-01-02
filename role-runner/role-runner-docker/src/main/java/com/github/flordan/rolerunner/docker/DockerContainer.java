@@ -28,8 +28,7 @@ public class DockerContainer extends Container {
         this(id, name, image, null);
     }
 
-    public DockerContainer(String id, String name, DockerImage image,
-        ContainerManager<DockerContainer, DockerImage> handler) {
+    public DockerContainer(String id, String name, DockerImage image, ContainerManager<DockerImage> handler) {
         super(image, handler);
         this.id = id;
         this.name = name;
