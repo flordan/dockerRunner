@@ -46,18 +46,15 @@ import java.util.TreeMap;
 
 public class DockerManager {
 
-    private final DockerClient client;
-    private final Map<String, DockerImage> images;
-    private final Map<ImageIdentifier, DockerImage> tags;
-    private final Map<ImageIdentifier, ImageManager> requestedTags;
-    private final Map<String, ContainerManager<DockerContainer, DockerImage>> requestedContainers;
-    private final Map<String, DockerContainer> containers;
+    private static final DockerClient CLIENT;
+    private static final Map<String, DockerImage> IMAGES;
+    private static final Map<ImageIdentifier, DockerImage> TAGS;
+    private static final Map<String, DockerContainer> CONTAINERS;
+    private static final Map<ImageIdentifier, ImageManager> REQ_TAGS;
+    private static final Map<String, ContainerManager<DockerContainer, DockerImage>> REQ_CONTAINERS;
 
-    public DockerManager() {
-
-
+    static {
         DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-
         ApacheDockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
             .dockerHost(config.getDockerHost())
             .sslConfig(config.getSSLConfig())
@@ -65,37 +62,41 @@ public class DockerManager {
             .connectionTimeout(Duration.ofSeconds(30))
             .responseTimeout(Duration.ofSeconds(45))
             .build();
+        CLIENT = DockerClientImpl.getInstance(config, httpClient);
 
-        this.client = DockerClientImpl.getInstance(config, httpClient);
+        IMAGES = new TreeMap<>();
+        TAGS = new TreeMap<>();
+        CONTAINERS = new TreeMap<>();
 
-        images = new TreeMap<>();
-        tags = new TreeMap<>();
-        requestedTags = new TreeMap<>();
-        containers = new TreeMap<>();
-        requestedContainers = new TreeMap<>();
-        this.client.eventsCmd().exec(new DockerMonitor());
+        CLIENT.eventsCmd().exec(new DockerMonitor());
         loadCurrentState();
 
+        REQ_TAGS = new TreeMap<>();
+        REQ_CONTAINERS = new TreeMap<>();
     }
 
-    private void loadCurrentState() {
-        List<Image> images = this.client.listImagesCmd().exec();
+    private DockerManager() throws InstantiationException {
+        throw new InstantiationException();
+    }
+
+    private static void loadCurrentState() {
+        List<Image> images = CLIENT.listImagesCmd().exec();
         for (Image i : images) {
             String id = i.getId();
             DockerImage di = new DockerImage(id);
             for (String tag : i.getRepoTags()) {
                 ImageIdentifier iId = ImageIdentifier.parse(tag);
                 di.addTag(iId);
-                tags.put(iId, di);
+                TAGS.put(iId, di);
             }
-            this.images.put(id, di);
+            IMAGES.put(id, di);
         }
-        List<Container> containers = this.client.listContainersCmd().exec();
+        List<Container> containers = CLIENT.listContainersCmd().exec();
         for (Container c : containers) {
             String containerID = c.getId();
             String name = c.getNames()[0];
             String imageID = c.getImageId();
-            DockerImage di = this.images.get(imageID);
+            DockerImage di = IMAGES.get(imageID);
             DockerContainer dc = new DockerContainer(containerID, name, di);
             switch (c.getState()) {
                 case "running":
@@ -107,13 +108,13 @@ public class DockerManager {
                 default:
                     // Assume Created
             }
-            this.containers.put(containerID, dc);
+            CONTAINERS.put(containerID, dc);
             di.addContainer(dc);
         }
     }
 
-    private void printCurrentState() {
-        for (DockerImage i : this.images.values()) {
+    private static void printCurrentState() {
+        for (DockerImage i : IMAGES.values()) {
             System.out.println(i.getID());
             System.out.println("├─tags:");
             Iterator<ImageIdentifier> tags = i.getTags().iterator();
@@ -137,25 +138,25 @@ public class DockerManager {
             }
         }
 
-        for (Map.Entry<ImageIdentifier, DockerImage> tagEntry : tags.entrySet()) {
+        for (Map.Entry<ImageIdentifier, DockerImage> tagEntry : TAGS.entrySet()) {
             System.out.println(tagEntry.getKey() + "-->" + tagEntry.getValue().getID());
         }
     }
 
-    public Set<ImageIdentifier> getAvailableImages() {
-        return this.tags.keySet();
+    public static Set<ImageIdentifier> getAvailableImages() {
+        return TAGS.keySet();
     }
 
-    public DockerImage getImage(ImageIdentifier iId) {
-        return this.tags.get(iId);
+    public static DockerImage getImage(ImageIdentifier iId) {
+        return TAGS.get(iId);
     }
 
-    public void requestImage(ImageIdentifier iId, ImageManager handler) {
-        synchronized (requestedTags) {
-            requestedTags.put(iId, handler);
+    public static void requestImage(ImageIdentifier iId, ImageManager handler) {
+        synchronized (REQ_TAGS) {
+            REQ_TAGS.put(iId, handler);
         }
         PullImageResultCallback cb = new PullCallback();
-        client.pullImageCmd(iId.getRepository()).withTag(iId.getTag()).exec(cb);
+        CLIENT.pullImageCmd(iId.getRepository()).withTag(iId.getTag()).exec(cb);
     }
 
     private static class PullCallback extends PullImageResultCallback {
@@ -163,12 +164,12 @@ public class DockerManager {
         }
     }
 
-    public void deleteImage(DockerImage image) {
-        client.removeImageCmd(image.getID()).exec();
+    public static void deleteImage(DockerImage image) {
+        CLIENT.removeImageCmd(image.getID()).exec();
     }
 
 
-    public void createContainer(DockerImage image, ContainerManager<DockerContainer, DockerImage> handler)
+    public static void createContainer(DockerImage image, ContainerManager<DockerContainer, DockerImage> handler)
         throws ImageNotFoundException {
         System.out.println("Create container for image " + image.getID() + " " + image.getTags());
         HostConfig hostConfig = HostConfig
@@ -177,12 +178,12 @@ public class DockerManager {
             .withAutoRemove(true);
 
         try {
-            synchronized (this.requestedContainers) {
-                CreateContainerResponse response = client.createContainerCmd(image.getID())
+            synchronized (REQ_CONTAINERS) {
+                CreateContainerResponse response = CLIENT.createContainerCmd(image.getID())
                     .withHostConfig(hostConfig)
                     .withCmd("sleep", "1000")
                     .exec();
-                this.requestedContainers.put(response.getId(), handler);
+                REQ_CONTAINERS.put(response.getId(), handler);
             }
         } catch (NotFoundException notFoundException) {
             throw new ImageNotFoundException();
@@ -190,15 +191,15 @@ public class DockerManager {
     }
 
 
-    public void startContainer(DockerContainer cnt) {
-        client.startContainerCmd(cnt.getId()).exec();
+    public static void startContainer(DockerContainer cnt) {
+        CLIENT.startContainerCmd(cnt.getId()).exec();
     }
 
-    public void destroyContainer(DockerContainer cnt) {
-        client.removeContainerCmd(cnt.getId()).exec();
+    public static void destroyContainer(DockerContainer cnt) {
+        CLIENT.removeContainerCmd(cnt.getId()).exec();
     }
 
-    private class DockerMonitor extends ResultCallback.Adapter<Event> {
+    private static class DockerMonitor extends ResultCallback.Adapter<Event> {
 
         public DockerMonitor() {
         }
@@ -238,13 +239,13 @@ public class DockerManager {
                 String id = event.getId();
                 String name = event.getActor().getAttributes().get("name");
                 String imageId = event.getActor().getAttributes().get("image");
-                DockerImage di = images.get(imageId);
+                DockerImage di = IMAGES.get(imageId);
                 ContainerManager handler;
-                synchronized (requestedContainers) {
-                    handler = requestedContainers.remove(id);
+                synchronized (REQ_CONTAINERS) {
+                    handler = REQ_CONTAINERS.remove(id);
                 }
                 DockerContainer dc = new DockerContainer(id, name, di, handler);
-                containers.put(id, dc);
+                CONTAINERS.put(id, dc);
                 di.addContainer(dc);
             } catch (Exception e) {
                 e.printStackTrace(System.out);
@@ -253,19 +254,19 @@ public class DockerManager {
 
         private void startedContainer(Event event) {
             String id = event.getId();
-            DockerContainer dc = containers.get(id);
+            DockerContainer dc = CONTAINERS.get(id);
             dc.started();
         }
 
         private void deadContainer(Event event) {
             String id = event.getId();
-            DockerContainer dc = containers.get(id);
+            DockerContainer dc = CONTAINERS.get(id);
             dc.stopped();
         }
 
         private void destroyedContainer(Event event) {
             String id = event.getId();
-            DockerContainer dc = containers.remove(id);
+            DockerContainer dc = CONTAINERS.remove(id);
             dc.destroyed();
         }
 
@@ -288,26 +289,26 @@ public class DockerManager {
 
         private void deletedImage(Event event) {
             String deletedId = event.getId();
-            DockerImage img = images.remove(deletedId);
+            DockerImage img = IMAGES.remove(deletedId);
             for (ImageIdentifier tag : img.getTags()) {
-                tags.remove(tag);
+                TAGS.remove(tag);
             }
             img.deleted();
         }
 
         private void pulledImage(Event event) {
             String pulledTag = event.getId();
-            InspectImageResponse response = DockerManager.this.client.inspectImageCmd(pulledTag).exec();
+            InspectImageResponse response = DockerManager.CLIENT.inspectImageCmd(pulledTag).exec();
             String imageId = response.getId();
             ImageIdentifier pulledIId = ImageIdentifier.parse(pulledTag);
             ImageManager handler;
-            synchronized (requestedTags) {
-                handler = requestedTags.remove(pulledIId);
+            synchronized (REQ_TAGS) {
+                handler = REQ_TAGS.remove(pulledIId);
             }
             DockerImage image = new DockerImage(imageId, handler);
-            images.put(imageId, image);
+            IMAGES.put(imageId, image);
             image.addTag(pulledIId);
-            tags.put(pulledIId, image);
+            TAGS.put(pulledIId, image);
             image.fetched();
         }
 
@@ -315,18 +316,18 @@ public class DockerManager {
             String taggedId = event.getId();
             String tag = event.getActor().getAttributes().get("name");
             ImageIdentifier iId = ImageIdentifier.parse(tag);
-            DockerImage oldImage = tags.get(iId);
+            DockerImage oldImage = TAGS.get(iId);
             if (oldImage != null) {
                 oldImage.removeTag(iId);
             }
-            DockerImage im = images.get(taggedId);
+            DockerImage im = IMAGES.get(taggedId);
             if (im == null) {
                 im = new DockerImage(taggedId);
-                images.put(taggedId, im);
+                IMAGES.put(taggedId, im);
             }
 
             im.addTag(iId);
-            tags.put(iId, im);
+            TAGS.put(iId, im);
         }
 
     }

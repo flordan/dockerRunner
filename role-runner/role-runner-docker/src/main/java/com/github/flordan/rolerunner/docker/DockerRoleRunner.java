@@ -26,41 +26,38 @@ import java.util.Set;
 
 public class DockerRoleRunner extends RoleRunnerImpl<DockerImage, DockerContainer> {
 
-    private final DockerManager monitor = new DockerManager();
-
     @Override
     public Set<ImageIdentifier> getAvailableImages() {
-        return monitor.getAvailableImages();
+        return DockerManager.getAvailableImages();
     }
 
     @Override
     public DockerImage getImage(ImageIdentifier iId) {
-        return monitor.getImage(iId);
+        return DockerManager.getImage(iId);
     }
 
     @Override
     public void requestImage(ImageIdentifier iId, ImageManager handler) {
-        monitor.requestImage(iId, handler);
+        DockerManager.requestImage(iId, handler);
     }
 
     @Override
     public void deleteImage(DockerImage img) {
-        monitor.deleteImage(img);
+        DockerManager.deleteImage(img);
     }
 
     @Override
     public void createContainer(DockerImage img, ContainerManager<DockerContainer, DockerImage> handler) throws ImageNotFoundException {
-        monitor.createContainer(img, handler);
+        DockerManager.createContainer(img, handler);
     }
 
     @Override
     public void startContainer(DockerContainer cnt) {
-        monitor.startContainer(cnt);
+        DockerManager.startContainer(cnt);
     }
 
     @Override
     public void destroyContainer(DockerContainer cnt) {
-
-        monitor.destroyContainer(cnt);
+        DockerManager.destroyContainer(cnt);
     }
 }
