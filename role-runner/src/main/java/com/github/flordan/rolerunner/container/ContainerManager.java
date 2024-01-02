@@ -30,7 +30,6 @@ public class ContainerManager<C extends Container, I extends Image> {
     public interface ContainerHandler<C extends Container, I extends Image> {
         void createContainer(I image, ContainerManager<C, I> manager) throws ImageNotFoundException;
 
-        void destroyContainer(C cnt);
     }
 
     private final ContainerHandler<C, I> handler;
@@ -63,7 +62,7 @@ public class ContainerManager<C extends Container, I extends Image> {
             toDelete.add(cntr);
         }
         for (C cntr : toDelete) {
-            handler.destroyContainer(cntr);
+            cntr.destroy();
         }
         System.out.println("Waiting for all containers to be removed.");
         synchronized (this) {

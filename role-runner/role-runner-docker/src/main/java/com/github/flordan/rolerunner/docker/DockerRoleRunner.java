@@ -45,9 +45,4 @@ public class DockerRoleRunner extends RoleRunnerImpl<DockerImage, DockerContaine
     public void createContainer(DockerImage img, ContainerManager<DockerContainer, DockerImage> handler) throws ImageNotFoundException {
         DockerManager.createContainer(img, handler);
     }
-
-    @Override
-    public void destroyContainer(DockerContainer cnt) {
-        DockerManager.destroyContainer(cnt);
-    }
 }

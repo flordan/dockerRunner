@@ -49,4 +49,8 @@ public class DockerContainer extends Container {
     public void start() {
         DockerManager.startContainer(this);
     }
+
+    public void destroy() {
+        DockerManager.destroyContainer(this);
+    }
 }

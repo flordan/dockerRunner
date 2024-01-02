@@ -20,6 +20,7 @@ import com.github.flordan.rolerunner.image.Image;
 
 public abstract class Container {
 
+
     private static enum Status {
         PENDING,
         CREATED,
@@ -40,6 +41,7 @@ public abstract class Container {
         this.image = image;
         this.monitor = monitor;
     }
+
     public Image getImage() {
         return image;
     }
@@ -55,6 +57,7 @@ public abstract class Container {
             monitor.createdContainer(this);
         }
     }
+
     public abstract void start();
 
     public void started() {
@@ -66,6 +69,8 @@ public abstract class Container {
         System.out.println("Container " + this + " has stopped");
         this.state = Status.STOPPED;
     }
+
+    public abstract void destroy();
 
     public void destroyed() {
         this.state = Status.DESTROYED;
