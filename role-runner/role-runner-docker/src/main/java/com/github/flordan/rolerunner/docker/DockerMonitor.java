@@ -24,6 +24,7 @@ import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Event;
+import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.api.model.PullResponseItem;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -151,7 +152,9 @@ public class DockerMonitor {
     }
 
     public void requestImage(ImageIdentifier iId, ImageManager handler) {
-        requestedTags.put(iId, handler);
+        synchronized (requestedTags) {
+            requestedTags.put(iId, handler);
+        }
         PullImageResultCallback cb = new PullCallback();
         client.pullImageCmd(iId.getRepository()).withTag(iId.getTag()).exec(cb);
     }
@@ -169,14 +172,24 @@ public class DockerMonitor {
     public void createContainer(DockerImage image, ContainerManager<DockerContainer, DockerImage> handler)
         throws ImageNotFoundException {
         System.out.println("Create container for image " + image.getID() + " " + image.getTags());
+        HostConfig hostConfig = HostConfig
+            .newHostConfig()
+            .withAutoRemove(true);
         try {
             synchronized (this.requestedContainers) {
-                CreateContainerResponse response = client.createContainerCmd(image.getID()).exec();
+                CreateContainerResponse response = client.createContainerCmd(image.getID())
+                    .withHostConfig(hostConfig)
+                    .exec();
                 this.requestedContainers.put(response.getId(), handler);
             }
         } catch (NotFoundException notFoundException) {
             throw new ImageNotFoundException();
         }
+    }
+
+
+    public void startContainer(DockerContainer cnt) {
+        client.startContainerCmd(cnt.getId()).exec();
     }
 
     public void destroyContainer(DockerContainer cnt) {
@@ -221,16 +234,12 @@ public class DockerMonitor {
         private void createdContainer(Event event) {
             try {
                 String id = event.getId();
-                System.out.println("Created " + id);
                 String name = event.getActor().getAttributes().get("name");
-                System.out.println("\t name " + name);
                 String imageId = event.getActor().getAttributes().get("image");
-                System.out.println("\t image " + imageId);
                 DockerImage di = images.get(imageId);
                 ContainerManager handler;
                 synchronized (requestedContainers) {
                     handler = requestedContainers.remove(id);
-                    System.out.println(handler);
                 }
                 DockerContainer dc = new DockerContainer(id, name, di, handler);
                 containers.put(id, dc);
@@ -289,13 +298,11 @@ public class DockerMonitor {
             InspectImageResponse response = DockerMonitor.this.client.inspectImageCmd(pulledTag).exec();
             String imageId = response.getId();
             ImageIdentifier pulledIId = ImageIdentifier.parse(pulledTag);
-            ImageManager handler = requestedTags.remove(pulledIId);
-            DockerImage image;
-            if (handler != null) {
-                image = new DockerImage(imageId, handler);
-            } else {
-                image = new DockerImage(imageId);
+            ImageManager handler;
+            synchronized (requestedTags) {
+                handler = requestedTags.remove(pulledIId);
             }
+            DockerImage image = new DockerImage(imageId, handler);
             images.put(imageId, image);
             image.addTag(pulledIId);
             tags.put(pulledIId, image);

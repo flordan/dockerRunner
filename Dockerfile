@@ -7,7 +7,8 @@ RUN gradle clean build \
     && tar xvf /home/gradle/project/app/build/distributions/app-1.0.tar -C /home/gradle/project/app/build/distributions/tar
 
 
-FROM openjdk:19-jdk-oracle
+#FROM openjdk:19-jdk-oracle
+FROM openjdk:19-jdk-slim
 COPY --from=builder /home/gradle/project/app/build/distributions/tar/app-1.0/lib /app/libs
 CMD ["java", "-classpath", "/app/libs/app-1.0.jar:\
 /app/libs/commons-io-2.6.jar:\

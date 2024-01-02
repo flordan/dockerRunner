@@ -38,7 +38,8 @@ public class DockerContainer extends Container {
         this(id, name, image, null);
     }
 
-    public DockerContainer(String id, String name, DockerImage image, ContainerManager<DockerContainer, DockerImage> handler) {
+    public DockerContainer(String id, String name, DockerImage image,
+        ContainerManager<DockerContainer, DockerImage> handler) {
         this.id = id;
         this.name = name;
         this.image = image;
@@ -63,10 +64,12 @@ public class DockerContainer extends Container {
 
 
     public void started() {
+        System.out.println("Container " + this.id + " has started");
         this.state = Status.RUNNING;
     }
 
     public void stopped() {
+        System.out.println("Container " + this.id + " has stopped");
         this.state = Status.STOPPED;
     }
 

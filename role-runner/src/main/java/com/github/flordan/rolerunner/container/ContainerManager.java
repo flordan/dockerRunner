@@ -29,6 +29,9 @@ public class ContainerManager<C extends Container, I extends Image> {
 
     public interface ContainerHandler<C extends Container, I extends Image> {
         void createContainer(I image, ContainerManager<C, I> manager) throws ImageNotFoundException;
+
+        void startContainer(C cnt);
+
         void destroyContainer(C cnt);
     }
 
@@ -45,12 +48,11 @@ public class ContainerManager<C extends Container, I extends Image> {
 
 
     public void createdContainer(C cntr) {
-        System.out.println("Registered container "+cntr);
         containers.add(cntr);
+        handler.startContainer(cntr);
     }
 
     public void destroyedContainer(C cntr) {
-        System.out.println("Destroyed container "+cntr);
         containers.remove(cntr);
         synchronized (this) {
             this.notify();

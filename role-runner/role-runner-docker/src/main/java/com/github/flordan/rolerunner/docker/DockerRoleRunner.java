@@ -54,6 +54,11 @@ public class DockerRoleRunner extends RoleRunnerImpl<DockerImage, DockerContaine
     }
 
     @Override
+    public void startContainer(DockerContainer cnt) {
+        monitor.startContainer(cnt);
+    }
+
+    @Override
     public void destroyContainer(DockerContainer cnt) {
 
         monitor.destroyContainer(cnt);

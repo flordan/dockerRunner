@@ -17,7 +17,16 @@ java -classpath /app/libs/app-1.0.jar:/app/libs/commons-io-2.6.jar:/app/libs/com
 
 ### Docker
 Build image:
-```docker build -t nested_docker:latest .```
+```
+docker build -t nested_docker:latest .
+```
+
+Multiplatform build & uploading to github
+```
+docker buildx build --platform linux/amd64,linux/arm64 -t nested_docker:latest . --push
+``` 
 
 Run:
-```docker run -it -v /var/run/docker.sock:/var/run/docker.sock --rm nested_docker```
+```
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock --rm nested_docker
+```
