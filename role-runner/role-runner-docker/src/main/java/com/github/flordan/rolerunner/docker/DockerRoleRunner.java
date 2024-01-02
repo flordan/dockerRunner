@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class DockerRoleRunner extends RoleRunnerImpl<DockerImage, DockerContainer> {
 
-    private final DockerMonitor monitor = new DockerMonitor();
+    private final DockerManager monitor = new DockerManager();
 
     @Override
     public Set<ImageIdentifier> getAvailableImages() {

@@ -22,11 +22,13 @@ import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Event;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.api.model.PullResponseItem;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -42,7 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-public class DockerMonitor {
+public class DockerManager {
 
     private final DockerClient client;
     private final Map<String, DockerImage> images;
@@ -51,7 +53,7 @@ public class DockerMonitor {
     private final Map<String, ContainerManager<DockerContainer, DockerImage>> requestedContainers;
     private final Map<String, DockerContainer> containers;
 
-    public DockerMonitor() {
+    public DockerManager() {
 
 
         DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
@@ -64,17 +66,14 @@ public class DockerMonitor {
             .responseTimeout(Duration.ofSeconds(45))
             .build();
 
-
         this.client = DockerClientImpl.getInstance(config, httpClient);
-
-        //this.client = DockerClientBuilder.getInstance("unix:///var/run/docker.sock").build();
 
         images = new TreeMap<>();
         tags = new TreeMap<>();
         requestedTags = new TreeMap<>();
         containers = new TreeMap<>();
         requestedContainers = new TreeMap<>();
-        this.client.eventsCmd().exec(new EventHandler());
+        this.client.eventsCmd().exec(new DockerMonitor());
         loadCurrentState();
 
     }
@@ -174,11 +173,14 @@ public class DockerMonitor {
         System.out.println("Create container for image " + image.getID() + " " + image.getTags());
         HostConfig hostConfig = HostConfig
             .newHostConfig()
+            .withBinds(new Bind("colmena", new Volume("/colmena")))
             .withAutoRemove(true);
+
         try {
             synchronized (this.requestedContainers) {
                 CreateContainerResponse response = client.createContainerCmd(image.getID())
                     .withHostConfig(hostConfig)
+                    .withCmd("sleep", "1000")
                     .exec();
                 this.requestedContainers.put(response.getId(), handler);
             }
@@ -196,9 +198,9 @@ public class DockerMonitor {
         client.removeContainerCmd(cnt.getId()).exec();
     }
 
-    private class EventHandler extends ResultCallback.Adapter<Event> {
+    private class DockerMonitor extends ResultCallback.Adapter<Event> {
 
-        public EventHandler() {
+        public DockerMonitor() {
         }
 
         public void onNext(Event event) {
@@ -295,7 +297,7 @@ public class DockerMonitor {
 
         private void pulledImage(Event event) {
             String pulledTag = event.getId();
-            InspectImageResponse response = DockerMonitor.this.client.inspectImageCmd(pulledTag).exec();
+            InspectImageResponse response = DockerManager.this.client.inspectImageCmd(pulledTag).exec();
             String imageId = response.getId();
             ImageIdentifier pulledIId = ImageIdentifier.parse(pulledTag);
             ImageManager handler;
