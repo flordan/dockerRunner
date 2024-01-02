@@ -27,14 +27,14 @@ import java.util.Set;
 
 
 public abstract class RoleRunnerImpl<I extends Image>
-    implements RoleRunner<I>, ImageManager.ImageHandler<I>, ContainerManager.ContainerHandler<I> {
+    implements RoleRunner<I>, ImageManager.ImageHandler<I> {
 
     protected final ImageManager<I> images;
-    protected final ContainerManager<I> containers;
+    protected final ContainerManager containers;
 
     public RoleRunnerImpl() {
         this.images = new ImageManager<>(this);
-        this.containers = new ContainerManager<>(this);
+        this.containers = new ContainerManager();
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
             public void run () {

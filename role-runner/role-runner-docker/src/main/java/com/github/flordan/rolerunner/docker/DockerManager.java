@@ -51,7 +51,7 @@ public class DockerManager {
     private static final Map<ImageIdentifier, DockerImage> TAGS;
     private static final Map<String, DockerContainer> CONTAINERS;
     private static final Map<ImageIdentifier, ImageManager> REQ_TAGS;
-    private static final Map<String, ContainerManager<DockerImage>> REQ_CONTAINERS;
+    private static final Map<String, ContainerManager> REQ_CONTAINERS;
 
     static {
         DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
@@ -169,7 +169,7 @@ public class DockerManager {
     }
 
 
-    public static void createContainer(DockerImage image, ContainerManager<DockerImage> handler)
+    public static void createContainer(DockerImage image, ContainerManager handler)
         throws ImageNotFoundException {
         System.out.println("Create container for image " + image.getID() + " " + image.getTags());
         HostConfig hostConfig = HostConfig

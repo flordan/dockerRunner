@@ -16,6 +16,8 @@
  */
 package com.github.flordan.rolerunner.docker;
 
+import com.github.flordan.rolerunner.container.ContainerManager;
+import com.github.flordan.rolerunner.exception.ImageNotFoundException;
 import com.github.flordan.rolerunner.image.Image;
 import com.github.flordan.rolerunner.image.ImageManager;
 
@@ -42,5 +44,10 @@ public class DockerImage extends Image {
     @Override
     public void delete() {
         DockerManager.deleteImage(this);
+    }
+
+    @Override
+    public void createContainer(ContainerManager monitor) throws ImageNotFoundException {
+        DockerManager.createContainer(this, monitor);
     }
 }

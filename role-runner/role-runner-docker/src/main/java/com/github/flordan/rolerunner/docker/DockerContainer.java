@@ -22,17 +22,15 @@ import com.github.flordan.rolerunner.container.ContainerManager;
 public class DockerContainer extends Container {
     private final String id;
     private final String name;
-    private final DockerImage image;
 
     public DockerContainer(String id, String name, DockerImage image) {
         this(id, name, image, null);
     }
 
-    public DockerContainer(String id, String name, DockerImage image, ContainerManager<DockerImage> handler) {
+    public DockerContainer(String id, String name, DockerImage image, ContainerManager handler) {
         super(image, handler);
         this.id = id;
         this.name = name;
-        this.image = image;
         created();
     }
 

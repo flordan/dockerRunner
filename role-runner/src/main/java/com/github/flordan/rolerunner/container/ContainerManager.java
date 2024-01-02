@@ -24,23 +24,15 @@ import com.github.flordan.rolerunner.image.ImageManager;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ContainerManager<I extends Image> {
+public class ContainerManager {
 
-
-    public interface ContainerHandler<I extends Image> {
-        void createContainer(I image, ContainerManager<I> manager) throws ImageNotFoundException;
-
-    }
-
-    private final ContainerHandler<I> handler;
     private final List<Container> containers;
-    public ContainerManager(ContainerHandler<I> handler) {
-        this.handler = handler;
+    public ContainerManager() {
         this.containers = new LinkedList<>();
     }
 
-    public void startRole(I image) throws ImageNotFoundException {
-        handler.createContainer(image, this);
+    public void startRole(Image image) throws ImageNotFoundException {
+        image.createContainer(this);
     }
 
 

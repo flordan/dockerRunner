@@ -40,9 +40,5 @@ public class DockerRoleRunner extends RoleRunnerImpl<DockerImage> {
     public void requestImage(ImageIdentifier iId, ImageManager handler) {
         DockerManager.requestImage(iId, handler);
     }
-
-    @Override
-    public void createContainer(DockerImage img, ContainerManager<DockerImage> handler) throws ImageNotFoundException {
-        DockerManager.createContainer(img, handler);
-    }
+    
 }

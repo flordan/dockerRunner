@@ -17,6 +17,8 @@
 package com.github.flordan.rolerunner.image;
 
 import com.github.flordan.rolerunner.container.Container;
+import com.github.flordan.rolerunner.container.ContainerManager;
+import com.github.flordan.rolerunner.exception.ImageNotFoundException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -74,4 +76,6 @@ public abstract class Image {
             this.monitor.deletedImage(this);
         }
     }
+
+    public abstract void createContainer(ContainerManager monitor) throws ImageNotFoundException;
 }
