@@ -127,13 +127,13 @@ public class DockerManager {
                 }
             }
             System.out.println("└─containers:");
-            Iterator<DockerContainer> containers = i.getContainers().iterator();
+            Iterator<com.github.flordan.rolerunner.container.Container> containers = i.getContainers().iterator();
             while (containers.hasNext()) {
-                DockerContainer container = containers.next();
+                com.github.flordan.rolerunner.container.Container container = containers.next();
                 if (containers.hasNext()) {
-                    System.out.println("     ├─" + container.getName() + " - " + container.getId());
+                    System.out.println("     ├─" + container);
                 } else {
-                    System.out.println("     └─" + container.getName() + " - " + container.getId());
+                    System.out.println("     └─" + container);
                 }
             }
         }

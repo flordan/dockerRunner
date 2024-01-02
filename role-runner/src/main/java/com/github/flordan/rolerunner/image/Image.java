@@ -16,6 +16,8 @@
  */
 package com.github.flordan.rolerunner.image;
 
+import com.github.flordan.rolerunner.container.Container;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,13 +25,16 @@ public abstract class Image {
 
     private final ImageManager monitor;
     private final Set<ImageIdentifier> tags;
+    private final Set<Container> containers;
 
     public Image() {
         this(null);
     }
+
     public Image(ImageManager monitor) {
         this.monitor = monitor;
         tags = new HashSet<>();
+        containers = new HashSet<>();
     }
 
     public void addTag(ImageIdentifier iId) {
@@ -44,16 +49,28 @@ public abstract class Image {
         return this.tags;
     }
 
-    public final void fetched(){
-        if (this.monitor !=null) {
+    public void addContainer(Container dc) {
+        this.containers.add(dc);
+    }
+
+    public void removeContainer(Container dc) {
+        this.containers.remove(dc);
+    }
+
+    public Set<Container> getContainers() {
+        return this.containers;
+    }
+
+    public final void fetched() {
+        if (this.monitor != null) {
             this.monitor.fetchedImage(this);
         }
     }
 
     public abstract void delete();
 
-    public final void deleted(){
-        if (this.monitor !=null) {
+    public final void deleted() {
+        if (this.monitor != null) {
             this.monitor.deletedImage(this);
         }
     }

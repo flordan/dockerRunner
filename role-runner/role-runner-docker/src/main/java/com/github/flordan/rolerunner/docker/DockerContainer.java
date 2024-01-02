@@ -23,16 +23,6 @@ public class DockerContainer extends Container {
     private final String id;
     private final String name;
     private final DockerImage image;
-    private final ContainerManager<DockerContainer, DockerImage> handler;
-
-    private static enum Status {
-        CREATED,
-        RUNNING,
-        STOPPED,
-        DESTROYED
-    }
-
-    private Status state;
 
     public DockerContainer(String id, String name, DockerImage image) {
         this(id, name, image, null);
@@ -40,14 +30,11 @@ public class DockerContainer extends Container {
 
     public DockerContainer(String id, String name, DockerImage image,
         ContainerManager<DockerContainer, DockerImage> handler) {
+        super(image, handler);
         this.id = id;
         this.name = name;
         this.image = image;
-        this.state = Status.CREATED;
-        this.handler = handler;
-        if (handler != null) {
-            handler.createdContainer(this);
-        }
+        created();
     }
 
     public String getId() {
@@ -56,32 +43,5 @@ public class DockerContainer extends Container {
 
     public String getName() {
         return name;
-    }
-
-    public DockerImage getImage() {
-        return image;
-    }
-
-
-    public void started() {
-        System.out.println("Container " + this.id + " has started");
-        this.state = Status.RUNNING;
-    }
-
-    public void stopped() {
-        System.out.println("Container " + this.id + " has stopped");
-        this.state = Status.STOPPED;
-    }
-
-    public void destroyed() {
-        this.state = Status.DESTROYED;
-        this.image.removeContainer(this);
-        if (handler != null) {
-            handler.destroyedContainer(this);
-        }
-    }
-
-    public String getStatus() {
-        return this.state.toString();
     }
 }

@@ -24,34 +24,20 @@ import java.util.Set;
 
 public class DockerImage extends Image {
     private final String ID;
-    private final Set<DockerContainer> containers;
 
     public DockerImage(String ID) {
         this(ID, null);
     }
+
     public DockerImage(String ID, ImageManager handler) {
         super(handler);
         this.ID = ID;
-        containers = new HashSet<>();
     }
 
     public String getID() {
         return ID;
     }
 
-
-
-    public void addContainer(DockerContainer dc) {
-        this.containers.add(dc);
-    }
-
-    public void removeContainer(DockerContainer dc) {
-        this.containers.remove(dc);
-    }
-
-    public Set<DockerContainer> getContainers() {
-        return this.containers;
-    }
 
     @Override
     public void delete() {
