@@ -21,6 +21,7 @@ import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
+import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
@@ -196,10 +197,19 @@ public class DockerManager {
         CLIENT.startContainerCmd(cnt.getId()).exec();
     }
     public static void stopContainer(DockerContainer cnt) {
-        CLIENT.stopContainerCmd(cnt.getId()).exec();
+        new Thread(){
+            public void run(){
+                CLIENT.stopContainerCmd(cnt.getId()).exec();
+            }
+        }.start();
     }
+
     public static void destroyContainer(DockerContainer cnt) {
-        CLIENT.removeContainerCmd(cnt.getId()).exec();
+        try {
+            CLIENT.removeContainerCmd(cnt.getId()).exec();
+        }catch(ConflictException ce){
+            //Ignore since it is already being removed
+        }
     }
 
     private static class DockerMonitor extends ResultCallback.Adapter<Event> {
