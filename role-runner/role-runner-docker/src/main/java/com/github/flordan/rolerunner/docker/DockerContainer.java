@@ -43,11 +43,16 @@ public class DockerContainer extends Container {
     }
 
     @Override
-    public void start() {
+    public void specificStart() {
         DockerManager.startContainer(this);
     }
 
-    public void destroy() {
+    @Override
+    public void specificStop() {
+        DockerManager.stopContainer(this);
+    }
+
+    public void specificDestroy() {
         DockerManager.destroyContainer(this);
     }
 }

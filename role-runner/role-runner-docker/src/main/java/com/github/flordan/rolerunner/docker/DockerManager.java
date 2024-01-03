@@ -159,6 +159,7 @@ public class DockerManager {
         CLIENT.pullImageCmd(iId.getRepository()).withTag(iId.getTag()).exec(cb);
     }
 
+
     private static class PullCallback extends PullImageResultCallback {
         public void onNext(PullResponseItem item) {
         }
@@ -194,7 +195,9 @@ public class DockerManager {
     public static void startContainer(DockerContainer cnt) {
         CLIENT.startContainerCmd(cnt.getId()).exec();
     }
-
+    public static void stopContainer(DockerContainer cnt) {
+        CLIENT.stopContainerCmd(cnt.getId()).exec();
+    }
     public static void destroyContainer(DockerContainer cnt) {
         CLIENT.removeContainerCmd(cnt.getId()).exec();
     }

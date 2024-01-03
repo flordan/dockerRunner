@@ -16,11 +16,6 @@
  */
 package com.github.flordan.rolerunner.container;
 
-import com.github.flordan.rolerunner.exception.ImageNotFoundException;
-import com.github.flordan.rolerunner.image.Image;
-import com.github.flordan.rolerunner.image.ImageIdentifier;
-import com.github.flordan.rolerunner.image.ImageManager;
-
 import java.util.LinkedList;
 import java.util.List;
 

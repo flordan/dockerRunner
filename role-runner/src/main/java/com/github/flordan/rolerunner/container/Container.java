@@ -18,20 +18,33 @@ package com.github.flordan.rolerunner.container;
 
 import com.github.flordan.rolerunner.image.Image;
 
+import java.util.LinkedList;
+import java.util.Deque;
+
 public abstract class Container {
 
 
-    private static enum Status {
+    protected static enum Status {
         PENDING,
         CREATED,
+        STARTING,
         RUNNING,
+        STOPPING,
         STOPPED,
+        DESTROYING,
         DESTROYED
+    }
+
+    private static enum Action {
+        START,
+        STOP,
+        DESTROY
     }
 
     private final ContainerManager monitor;
     private final Image image;
     private Status state = Status.PENDING;
+    private final Deque<Action> pendingActions;
 
     public Container(Image image) {
         this(image, null);
@@ -40,14 +53,15 @@ public abstract class Container {
     public Container(Image image, ContainerManager monitor) {
         this.image = image;
         this.monitor = monitor;
+        pendingActions = new LinkedList<>();
     }
 
     public Image getImage() {
         return image;
     }
 
-    public final String getStatus() {
-        return this.state.toString();
+    public final Status getStatus() {
+        return this.state;
     }
 
     public void created() {
@@ -56,27 +70,104 @@ public abstract class Container {
         if (monitor != null) {
             monitor.createdContainer(this);
         }
+        manageLifecycle();
     }
 
-    public abstract void start();
+    public final void start() {
+        pendingActions.add(Action.START);
+        manageLifecycle();
+    }
+
+    public abstract void specificStart();
 
     public void started() {
         System.out.println("Container " + this + " has started");
         this.state = Status.RUNNING;
+        manageLifecycle();
     }
+
+    public void stop() {
+        pendingActions.add(Action.STOP);
+        manageLifecycle();
+    }
+
+    public abstract void specificStop();
 
     public void stopped() {
         System.out.println("Container " + this + " has stopped");
         this.state = Status.STOPPED;
+        manageLifecycle();
     }
 
-    public abstract void destroy();
+    public void destroy() {
+        pendingActions.add(Action.DESTROY);
+        manageLifecycle();
+    }
+
+    public abstract void specificDestroy();
 
     public void destroyed() {
         this.state = Status.DESTROYED;
         this.image.removeContainer(this);
         if (monitor != null) {
             monitor.destroyedContainer(this);
+        }
+        manageLifecycle();
+    }
+
+    private void manageLifecycle() {
+        if (pendingActions.isEmpty()) {
+            return;
+        }
+        Action action;
+        switch (state) {
+            case CREATED:
+                action = pendingActions.poll();
+                switch (action) {
+                    case START:
+                        state = Status.STARTING;
+                        specificStart();
+                        break;
+                    case STOP:
+                        state = Status.STOPPED;
+                        break;
+                    case DESTROY:
+                        state = Status.DESTROYING;
+                        specificDestroy();
+                        break;
+                }
+                break;
+            case RUNNING:
+                action = pendingActions.poll();
+                switch (action) {
+                    case START:
+                        break;
+                    case STOP:
+                        state = Status.STOPPING;
+                        specificStop();
+                        break;
+                    case DESTROY:
+                        state = Status.STOPPING;
+                        pendingActions.add(Action.DESTROY);
+                        specificStop();
+                        break;
+                }
+                break;
+            case STOPPED:
+                action = pendingActions.poll();
+                switch (action) {
+                    case START:
+                        break;
+                    case STOP:
+                        break;
+                    case DESTROY:
+                        state = Status.DESTROYING;
+                        specificDestroy();
+                        break;
+                }
+                break;
+            default:
+                // wait until change
         }
     }
 }
